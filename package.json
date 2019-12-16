@@ -1,0 +1,16 @@
+{
+  "name": "es6-component-loader",
+  "version": "1.0.0",
+  "description": "Js Component Loader using ES6 syntax to be compiled using Babel or similar",
+  "main": "./src/ComponentLoader.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "js",
+    "components",
+    "component loader"
+  ],
+  "author": "Jochen Achmüller",
+  "license": "MIT"
+}
