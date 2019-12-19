@@ -78,7 +78,7 @@ class ComponentLoader {
             const component = loaded[i];
             component.onLoad();
         }
-        this._l.debug('Calling on ' + loaded.length + ' Components');
+        this._l.debug(`Calling on ${loaded.length} Components`);
         this._l.stopTimer('Components onLoad Time');
         this._l.groupEnd();
 
@@ -108,7 +108,7 @@ class ComponentLoader {
             }
         }
 
-        this._l.group(component.name + ' (' + componentElements.length + ')');
+        this._l.group(`${component.name} (${componentElements.length})`);
         this._l.startTimer('Component Time');
         
         for (let i = 0; i < componentElements.length; i++) {
