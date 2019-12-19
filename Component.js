@@ -3,7 +3,7 @@ import EventEmitter from './EventEmitter';
 class Component extends EventEmitter {
     static ComponentData = {
         //selector: 'myselector', // The Component Selector. Can be type of string or ElementSelector
-        //dataPrefix: 'myselector', // the dataset prefix. dataset.<datasetPrefix><optionName>
+        //datasetPrefix: 'myselector', // the dataset prefix. dataset.<datasetPrefix><optionName>
         //baseName: 'mydata', // the base name in the options object (dataset.<datasetPrefix> with no following name). default 'data'
     };
 
