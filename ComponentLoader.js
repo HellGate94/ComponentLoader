@@ -1,6 +1,24 @@
 import Component from './Component';
 import Logger from './Logger';
 
+class ComponentData {
+
+    /** @var {{new(): Component}} component */
+    component;
+
+    /** @var {any} data */
+    data;
+
+    /** @var {(key, value) => any} component */
+    optionParser;
+
+    constructor(component, data, optionParser = null) {
+        this.component = component;
+        this.data = data;
+        this.optionParser = optionParser;
+    }
+}
+
 class ComponentLoader {
     static _loadedComponents = [];
     static _documentLoaded = false;
@@ -14,9 +32,11 @@ class ComponentLoader {
     /**
      * registers a Component. registered Components will be applied on applyComponents.
      * @param {{new(): Component}} component constructor function of a Component subclass
+     * @param {any} componentdata the componentdata. if null it will use the static component.ComponentData value
+     * @param {(key, value) => any} optionparser callback function to alter component options
      */
-    static registerComponent(component) {
-        ComponentLoader._loadedComponents.push(component);
+    static registerComponent(component, componentdata = null, optionparser = null) {
+        ComponentLoader._loadedComponents.push(new ComponentData(component, componentdata || component.ComponentData, optionparser));
 
         if (ComponentLoader._documentLoaded) {
             component.onComponentLoad();
@@ -35,8 +55,8 @@ class ComponentLoader {
             ComponentLoader._documentLoaded = true;
             
             for (let i = 0; i < this._loadedComponents.length; i++) {
-                const component = this._loadedComponents[i];
-                component.onComponentLoad();
+                const componentdata = this._loadedComponents[i];
+                componentdata.component.onComponentLoad();
             }
 
             if (this.autoLoad) {
@@ -66,8 +86,8 @@ class ComponentLoader {
 
         this._l.group('Components', true);
         for (let i = 0; i < this._loadedComponents.length; i++) {
-            const component = this._loadedComponents[i];
-            let loadedcomponents = ComponentLoader._applyComponent(elements, component);
+            const componentdata = this._loadedComponents[i];
+            let loadedcomponents = ComponentLoader._applyComponent(elements, componentdata);
             loaded.push(...loadedcomponents);
         }
         this._l.groupEnd();
@@ -88,15 +108,16 @@ class ComponentLoader {
         this._l.muted = false;
     }
 
-
     /**
      * @param {Array<Element>} elements
-     * @param {{new(): Component}} component
+     * @param {ComponentData} componentdata
      */
-    static _applyComponent(elements, component) {
+    static _applyComponent(elements, componentdata) {
         let loadedcomponents = [];
 
-        let sel = component.ComponentData['selector'];
+        const component = componentdata.component;
+
+        let sel = componentdata.data['selector'];
 
         let componentElements = [];
         for (let i = 0; i < elements.length; i++) {
@@ -114,7 +135,7 @@ class ComponentLoader {
         for (let i = 0; i < componentElements.length; i++) {
             const value = componentElements[i];
             
-            let options = ComponentLoader._parseComponentOptions(value, component);
+            let options = ComponentLoader._parseComponentOptions(value, componentdata);
     
             this._l.group('Instance', true);
             loadedcomponents.push(new component(value, options));
@@ -130,24 +151,29 @@ class ComponentLoader {
 
     /**
      * @param {Element} element
-     * @param {{new(): Component}} component
+     * @param {ComponentData} componentdata
      */
-    static _parseComponentOptions(element, component) {
+    static _parseComponentOptions(element, componentdata) {
         let options = {};
 
-        let datasetPrefix = component.ComponentData['datasetPrefix'];
+        let datasetPrefix = componentdata.data['datasetPrefix'];
         if (datasetPrefix) {
             for (const opt in element.dataset) {
                 if (opt.startsWith(datasetPrefix)) {
                     let name = opt.substring(datasetPrefix.length, datasetPrefix.length + 1).toLowerCase() + opt.substring(datasetPrefix.length + 1, opt.length);
                     if (!name || name.length == 0) {
-                        name = component.ComponentData['baseName'] || 'data';
+                        name = componentdata.data['baseName'] || 'data';
                     }
+                    let value;
                     try {
-                        options[name] = JSON.parse(element.dataset[opt]);
+                        value = JSON.parse(element.dataset[opt]);
                     } catch {
-                        options[name] = element.dataset[opt];
+                        value = element.dataset[opt];
                     }
+                    if (componentdata.optionParser) {
+                        value = componentdata.optionParser(name, value);
+                    }
+                    options[name] = value;
                 }
             }
         }
