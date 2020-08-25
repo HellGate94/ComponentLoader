@@ -3,7 +3,7 @@ import $ from 'jquery';
 
 class $Component extends Component {
     /**
-     * @type {jQuery}
+     * @type {JQuery<T>}
      */
     $el;
 

@@ -180,6 +180,25 @@ class ComponentLoader {
 
         return options;
     }
+    
+    /**
+     * 
+     * @param {{new(): Component}} componentclass The Component Type to find
+     * @param {Element} scope Where to search for. Default document.body
+     * @returns {Array<Component>}
+     */
+    static findComponents(componentclass, scope = document.body) {
+        let components = [];
+        let sel = componentclass.ComponentData['selector'];
+        if (sel) {
+            let compelements = scope.querySelectorAll(sel);
+            for (const ele of compelements) {
+                let elecomp = ele.getComponent(componentclass);
+                components.push(elecomp);
+            }
+        }
+        return components;
+    }
 }
 
 ComponentLoader._l = new Logger('ComponentLoader', 'color: green; font-weight: bold;');
