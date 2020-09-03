@@ -1,4 +1,3 @@
-import Component from './Component';
 import Logger from './Logger';
 
 class ComponentData {
