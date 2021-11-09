@@ -35,12 +35,13 @@ class ComponentLoader {
      * @param {(key, value) => any} optionparser callback function to alter component options
      */
     static registerComponent(component, componentdata = null, optionparser = null) {
-        ComponentLoader._loadedComponents.push(new ComponentData(component, componentdata || component.ComponentData, optionparser));
+        let comp = new ComponentData(component, componentdata || component.ComponentData, optionparser);
+        ComponentLoader._loadedComponents.push(comp);
 
         if (ComponentLoader._documentLoaded) {
             component.onComponentLoad();
             if (this.autoLoad) {
-                let loaded = ComponentLoader._applyComponent([document.documentElement], component);
+                let loaded = ComponentLoader._applyComponent([document.documentElement], comp);
                 for (let i = 0; i < loaded.length; i++) {
                     const component = loaded[i];
                     component.onLoad();
