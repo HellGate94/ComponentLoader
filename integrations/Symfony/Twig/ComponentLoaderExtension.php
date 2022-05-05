@@ -2,63 +2,70 @@
 
 namespace App\Twig;
 
+use Symfony\Component\Serializer\Encoder\EncoderInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-class ComponentLoaderExtension extends AbstractExtension {
+class ComponentLoaderExtension extends AbstractExtension
+{
+    private SerializerInterface $serializer;
+
+    public function __construct(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
     /**
      * {@inheritdoc}
      */
-    public function getFilters(): array {
+    public function getFilters(): array
+    {
         return [
-            new TwigFilter('compdata', [$this, 'compdatafilter']),
+            new TwigFilter('compdata', [$this, 'compDataFilter']),
+            new TwigFilter('compData', [$this, 'compDataFilter']),
         ];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFunctions(): array {
+    public function getFunctions(): array
+    {
         return [
-            new TwigFunction('compdata', [$this, 'compdatafunction'], ['is_safe' => ['html']]),
+            new TwigFunction('compdata', [$this, 'compDataFunction'], ['is_safe' => ['html']]),
+            new TwigFunction('compData', [$this, 'compDataFunction'], ['is_safe' => ['html']]),
         ];
     }
 
-    private function dataattrname(string $datasetname) {
-        return 'data-' . strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $datasetname));
+    private function dataAttrName(string $datasetName): string
+    {
+        return 'data-' . strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $datasetName));
     }
 
-    private function datavalue($value) {
-        return json_encode($value);
+    private function dataValue($value): string
+    {
+        return $this->serializer->serialize($value, 'json');
     }
 
     /**
      * for direct use in html elements
-     * <div {{ compdata('datasetPrefix', { data: data }) }}></div>
+     * <div {{ compData('datasetPrefix', { data: data }) }}></div>
      */
-    public function compdatafunction(string $dataprefix, array $options) {
-        $ret = '';
-        $first = true;
-        foreach ($options as $key => $value) {
-            if (!$first) {
-                $ret .= ' ';
-            }
-            $dataattrname = $this->dataattrname($dataprefix . \ucfirst($key));
-            $ret .= $dataattrname . '="' . htmlspecialchars($this->datavalue($value)) . '"';
-            $first = false;
-        }
-        return $ret;
+    public function compDataFunction(string $dataprefix, array $options = null)
+    {
+        $val = $options ? $this->dataValue($options) : '{}';
+        return $this->dataAttrName($dataprefix) . '="' . htmlspecialchars($val) . '"';
     }
 
     /**
      * for use with symfony formbuilder attributes
-     * form_widget(form.widget, {}|compdata('datasetPrefix', { data: data }))
+     * form_widget(form.widget, {}|compData('datasetPrefix', { data: data }))
      */
-    public function compdatafilter(array $attributes, string $dataprefix, array $options) {
-        foreach ($options as $key => $value) {
-            $attributes['attr'][$this->dataattrname($dataprefix . \ucfirst($key))] = $this->datavalue($value);
-        }
+    public function compDataFilter(array $attributes, string $dataprefix, array $options = null)
+    {
+        $attributes['attr'][$this->dataAttrName($dataprefix)] = $options ? $this->dataValue($options) : '{}';
         return $attributes;
     }
 }
